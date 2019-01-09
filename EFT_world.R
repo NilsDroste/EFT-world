@@ -1,6 +1,5 @@
 #################################################################################
 # analysis of IUCN category PA in 2016 
-setwd("/home/droste/Dropbox/Dokumente/doctorate/fiscal transfers/EFT-world/data")
 #################################################################################
 
 # 00 - preps -------------------------------------------------------
@@ -9,7 +8,8 @@ setwd("/home/droste/Dropbox/Dokumente/doctorate/fiscal transfers/EFT-world/data"
 require(WDI)
 require(dplyr)
 require(tidyr)
-
+require(here)
+setwd(here())
 
 # 01 - read in  data ----------------------------------------------------------
 
@@ -35,7 +35,7 @@ CBD <- rbind(CBD,c(No.="",Country.Name="Greenland",as.vector(CBD[CBD$Country.Nam
 
 CBD[CBD$Country.Name=="Bolivia (Plurinational State of)",2] <- "Bolivia"
 CBD[CBD$Country.Name=="Cabo Verde",2] <- "Cape Verde"
-CBD[CBD$Country.Name=="Côte d'Ivoire",2] <- "Cote d'ivoire"
+CBD[CBD$Country.Name=="CÃ´te d'Ivoire",2] <- "Cote d'ivoire"
 CBD[CBD$Country.Name=="Democratic People's Republic of Korea",2] <- "Korea, Democratic People's Republic of"
 CBD[CBD$Country.Name=="Democratic Republic of the Congo",2] <- "Congo, The Democratic Republic of the"
 CBD[CBD$Country.Name=="Gambia (the)",2] <- "Gambia"
@@ -52,18 +52,18 @@ CBD[CBD$Country.Name=="Venezuela (Bolivarian Republic of)",2] <- "Venezuela"
 CBD$ID <- tolower(CBD$Country.Name)
 
 #HDI
-all_content_HDI = readLines("HDI.csv", 190) #omitting incomplete last line problem
+all_content_HDI = readLines("HDI2017.csv", 190) #omitting incomplete last line problem
 skip_first = all_content_HDI[-1] #reading in data except first line
 HDI = read.csv(textConnection(skip_first), header = TRUE, stringsAsFactors = FALSE) #create data set
 
 #fixing name problems for merge
-HDI[HDI$Country== " C\xf4te d'Ivoire",2] <- " Cote d'ivoire"
+#HDI[HDI$Country== " C\xf4te d'Ivoire",2] <- "Cote d'ivoire"
 HDI$Country <- substring(HDI$Country, 2)
 
 # adding greenland
-HDI <- rbind(HDI,as.vector(unlist(c("","Greenland",HDI[HDI$Country=="Denmark",c(3:28)]))))
+HDI <- rbind(HDI,as.vector(unlist(c("","Greenland",HDI[HDI$Country=="Denmark",c(3:ncol(HDI))]))))
 #adding Somalia (not on UNDP page but here: https://en.wikipedia.org/wiki/List_of_countries_by_Human_Development_Index)
-HDI <- rbind(HDI,as.vector(unlist(c("","Somalia",rep("NA",25),0.285)))) #2012 estimate
+HDI <- rbind(HDI,as.vector(unlist(c("","Somalia",rep("NA",(ncol(HDI)-3)),0.285)))) #2012 estimate
 
 # fixing rest of name probs
 HDI[HDI$Country=="Bolivia (Plurinational State of)",2] <- "Bolivia"
@@ -86,17 +86,18 @@ HDI[HDI$Country=="Venezuela (Bolivarian Republic of)",2] <- "Venezuela"
 HDI$ID <- tolower(HDI$Country)
 
 #population
-pop <- WDI(country = "all", indicator = "SP.POP.TOTL", start = 2015, end = 2015, extra = FALSE, cache = NULL)
+pop <- WDI(country = "all", indicator = "SP.POP.TOTL", start = 2017, end = 2017, extra = FALSE, cache = NULL)
 names(pop)[names(pop) == 'iso2c'] <- 'ISO2' #renaming ISO column
 pop <- pop[c(48:nrow(pop)),]
 
 #GDP
-GDP <- WDI(country = "all", indicator = "NY.GDP.MKTP.PP.KD", start = 2015, end = 2015, extra = FALSE, cache = NULL)
+GDP <- WDI(country = "all", indicator = "NY.GDP.MKTP.PP.KD", start = 2017, end = 2017, extra = FALSE, cache = NULL)
 names(GDP)[names(GDP) == 'iso2c'] <- 'ISO2' #renaming ISO column
 GDP <- GDP[c(48:nrow(GDP)),]
+GDP[GDP$country=="West Bank and Gaza",'country'] <- 
 
 #tax revenue
-TR <- WDI(country = "all", indicator = "GC.TAX.TOTL.GD.ZS", start = 1960, end = 2015, extra = FALSE, cache = NULL)
+TR <- WDI(country = "all", indicator = "GC.TAX.TOTL.GD.ZS", start = 1960, end = 2017, extra = FALSE, cache = NULL)
 TR_groups <- TR[c(1:2632),]
 TR <- TR[c(2633:nrow(TR)),]
 # detach(package:MASS) # detach to avoid confusion with select
@@ -146,10 +147,10 @@ df <-inner_join(PA_DF,CBD[,c(5,7)], by = 'ID') #subsetting to those parties who 
 names(df)[names(df) == 'Party'] <- 'CBD' #renaming CBD column
 
 # plus HDI
-df <- inner_join(df,HDI[,c(28,29)], by = 'ID') #subsetting to those countries who also have a HDI
+df <- inner_join(df,HDI[,c((ncol(HDI)-1):ncol(HDI))], by = 'ID') #subsetting to those countries who also have a HDI
 
 # edits
-names(df)[names(df) == 'X2015'] <- 'HDI' #renaming HDI colum
+names(df)[names(df) == 'X2017'] <- 'HDI' #renaming HDI colum
 df$ISO2 <- as.character(df$ISO2)
 df[df$Country.Name=="NAMIBIA","ISO2"] <- "NA" # since it is not NA but "NA"
 
@@ -184,19 +185,16 @@ df$POP[which(df$Country.Name=="SOUTH SUDAN")] <- 12340000 #wikipedia
 #TODO: add GDP for following countries from CIA World Factbook (https://www.cia.gov/library/publications/the-world-factbook/rankorder/2001rank.html)
 # df[which(is.na(df$GDP)),1]
 df$GDP[which(df$Country.Name=="ANDORRA")] <- 3327000000 #2015 est
-df$GDP[which(df$Country.Name=="CUBA")] <-134200000000 #2015 est
-df$GDP[which(df$Country.Name=="ERITREA")] <- 9169000000 #2016 est
-df$GDP[which(df$Country.Name=="GREENLAND")] <- 2173000000 #2015 est
-df$GDP[which(df$Country.Name=="IRAN, ISLAMIC REPUBLIC OF")] <- 1459000000000 #2016 est
-df$GDP[which(df$Country.Name=="LIBYA")] <- 90890000000 #2016 est
+df$GDP[which(df$Country.Name=="CUBA")] <-137000000000 #2017 est
+df$GDP[which(df$Country.Name=="DJIBOUTI")] <-3632000000 #2017 est
+df$GDP[which(df$Country.Name=="ERITREA")] <- 9382000000 #2017 est
+df$GDP[which(df$Country.Name=="GREENLAND")] <- 2413000000 #2015 est
 df$GDP[which(df$Country.Name=="LIECHTENSTEIN")] <- 4978000000 #2014 est
-df$GDP[which(df$Country.Name=="MAURITANIA")] <- 16710000000 #2016 est
-df$GDP[which(df$Country.Name=="PAPUA NEW GUINEA")] <- 28020000000 #2016 est
-df$GDP[which(df$Country.Name=="SOUTH SUDAN")] <- 20880000000 #2016 est
+df$GDP[which(df$Country.Name=="SOMALIA")] <- 18660000000 #2016 est
+df$GDP[which(df$Country.Name=="SOUTH SUDAN")] <- 18740000000 #2017 est
 df$GDP[which(df$Country.Name=="SYRIAN ARAB REPUBLIC")] <- 50280000000 #2015 est
-df$GDP[which(df$Country.Name=="VENEZUELA")] <- 468600000000 #2016 est
-df$GDP[which(df$Country.Name=="SOMALIA")] <- 4719000000 #2016 est
-df$GDP[which(df$Country.Name=="PALESTINE, STATE OF")] <- 12766*10e+6 #2014 est from http://data.un.org/CountryProfile.aspx?crName=State%20of%20Palestine
+df$GDP[which(df$Country.Name=="VENEZUELA")] <- 380700000000 #2017 est
+df$GDP[which(df$Country.Name=="YEMEN")] <- 38600000000 #2017 est
 
 # plus tax revenue
 df <- left_join(df, TR, by = 'ISO2')
@@ -225,19 +223,21 @@ df[df$Country.Name=="LIBYA","avgTR"] <- TR_groups[TR_groups$country=="Upper midd
 df[df$Country.Name=="LIECHTENSTEIN","avgTR"] <- TR_groups[TR_groups$country=="High income",2] 
 df[df$Country.Name=="MAURITANIA","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
 df[df$Country.Name=="MONTENEGRO","avgTR"] <- TR_groups[TR_groups$country=="Lower middle income",2]
-df[df$Country.Name=="MYANMAR","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
+#df[df$Country.Name=="MYANMAR","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
 df[df$Country.Name=="NIGER","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
-df[df$Country.Name=="PALAU","avgTR"] <- TR_groups[TR_groups$country=="Upper middle income",2]
+#df[df$Country.Name=="PALAU","avgTR"] <- TR_groups[TR_groups$country=="Upper middle income",2]
 df[df$Country.Name=="PANAMA","avgTR"] <- TR_groups[TR_groups$country=="Upper middle income",2]
-df[df$Country.Name=="SAUDI ARABIA","avgTR"] <- TR_groups[TR_groups$country=="High income",2] 
-df[df$Country.Name=="SOUTH SUDAN","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
+df[df$Country.Name=="SAUDI ARABIA","avgTR"] <- TR_groups[TR_groups$country=="High income",2]
 df[df$Country.Name=="SOMALIA","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
+df[df$Country.Name=="SOUTH SUDAN","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
 df[df$Country.Name=="SUDAN","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
 df[df$Country.Name=="TAJIKISTAN","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
 df[df$Country.Name=="TONGA","avgTR"] <- TR_groups[TR_groups$country=="Lower middle income",2]
 df[df$Country.Name=="TURKMENISTAN","avgTR"] <- TR_groups[TR_groups$country=="Lower middle income",2]
-df[df$Country.Name=="UZBEKISTAN","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
+#df[df$Country.Name=="UZBEKISTAN","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
 df[df$Country.Name=="VENEZUELA","avgTR"] <- TR_groups[TR_groups$country=="Upper middle income",2]
+df[df$Country.Name=="YEMEN","avgTR"] <- TR_groups[TR_groups$country=="Low income",2]
+
 
 #government effectivness
 df <- left_join(df, GE[,c("ISO","GE")], by = 'ISO')
@@ -260,8 +260,8 @@ df$PA_ind <-  rowSums(mapply('*',(df[,c("PAcatIa","PAcatIb","PAcatII","PAcatIII"
 
 df$EFT_eco <- df$PA_ind*(1e+9/sum(df$PA_ind)) # 1 B fund size share for each countr
 
-hist(log(df$EFT_eco))
-head(df[with(df,order(-EFT_eco)),c(1,23)],10) #top EFT
+# hist(log(df$EFT_eco),breaks=20, xlim=c(-20,30))
+# head(df[with(df,order(-EFT_eco)),c(1,23)],10) #top EFT
 
 # socio-ecological -- PA / HDI
 df$SE_ind <-  ((df$PAcatIa/100)*iucn_weights[1]+(df$PAcatIb/100)*iucn_weights[2]+(df$PAcatII/100)*iucn_weights[3]+(df$PAcatIII/100)*iucn_weights[4]+(df$PAcatIV/100)*iucn_weights[5]+(df$PAcatV/100)*iucn_weights[6]+(df$PAcatVI/100)*iucn_weights[7])/df$HDI
@@ -269,7 +269,7 @@ df$SE_ind <-  ((df$PAcatIa/100)*iucn_weights[1]+(df$PAcatIb/100)*iucn_weights[2]
 
 df$EFT_soceco <- df$SE_ind*(1e+9/sum(df$SE_ind)) # 1 B fund size share for each country
 
-# hist(log(df$EFT_soceco))
+# hist(log(df$EFT_soceco),breaks=20, xlim=c(-20,30))
 # head(df[with(df,order(-EFT_soceco)),c(1,25)],10) #top EFT
 
 # anthropocentric (PA/HDI)
@@ -278,8 +278,8 @@ df$ANTHR_ind <-  (((df$PAcatIa/100)*iucn_weights[1]+(df$PAcatIb/100)*iucn_weight
 # df$EFT_anthr <-  df$ANTHR_ind*(1e+9/sum(df$ANTHR_ind))
 df$EFT_anthr <-  df$ANTHR_ind*(1e+9/sum(df$ANTHR_ind))
 
-hist(log(df$EFT_anthr))
-head(df[with(df,order(-EFT_anthr)),c(1,27)],10) #top EFT
+# hist(log(df$EFT_anthr),breaks=20, xlim=c(-20,30))
+# head(df[with(df,order(-EFT_anthr)),c(1,27)],10) #top EFT
 
 
 # 04 - analyze the incentive -------------------------------------------------
@@ -292,42 +292,48 @@ PAprob <- colMeans(df[,c("PAcatIa","PAcatIb","PAcatII","PAcatIII","PAcatIV","PAc
 # calculate the increase in EFT as a share of GDP for a 1% increase in PA given mean PA designation probabilities for each country, ceteris paribus
 
 # ecocentric
+EFT_inc_abs <- vector(mode="numeric", length=nrow(df))
 EFT_inc_gdp <- vector(mode="numeric", length=nrow(df))
 EFT_inc_sqkm <- vector(mode="numeric", length=nrow(df))
 
 for (i in 1:nrow(df)){
   oldPA_i <- df[i,c("PAcatIa","PAcatIb","PAcatII","PAcatIII","PAcatIV","PAcatV","PAcatVI")]
-  newPA_i <- oldPA_i + (df$SQKM[i]*PAprob)/df$SQKM[i]
+  newPA_i <- oldPA_i + PAprob
   newIND_i <- rowSums(newPA_i/100*df$SQKM[i]*iucn_weights)
   newIND <- df$PA_ind
   newIND[i] <- newIND_i
   newEFT <- newIND*(1e+9/sum(newIND)) 
   newEFT_i <- newEFT[i]
+  EFT_inc_abs[i] <- newEFT_i-df$EFT_eco[i]
   EFT_inc_gdp[i] <- (newEFT_i-df$EFT_eco[i])/df$GDP[i]*100
   EFT_inc_sqkm[i] <- (newEFT_i-df$EFT_eco[i])/df$SQKM[i]
   #print(paste("oldEFT_",i, " < newEFT_",i,": ", df$EFT_eco[i]<newEFT_i, sep = ""))
 }
 
+df$EFT_eco_incent_abs <- EFT_inc_abs
 df$EFT_eco_incent_gdp <- EFT_inc_gdp
 df$EFT_eco_incent_sqkm <- EFT_inc_sqkm
 
 # socio-ecological
+EFT_inc_abs <- vector(mode="numeric", length=nrow(df))
 EFT_inc_gdp <- vector(mode="numeric", length=nrow(df))
 EFT_inc_sqkm <- vector(mode="numeric", length=nrow(df))
 
 for (i in 1:nrow(df)){
   oldPA_i <- df[i,c("PAcatIa","PAcatIb","PAcatII","PAcatIII","PAcatIV","PAcatV","PAcatVI")]
-  newPA_i <- oldPA_i + (df$SQKM[i]*PAprob)/df$SQKM[i]
-  newIND_i <- rowSums(newPA_i/100*iucn_weights)/df$HDI[i]
+  newPA_i <- oldPA_i + PAprob
+  newIND_i <- rowSums(newPA_i/100*iucn_weights)/df$HDI[i] #
   newIND <- df$SE_ind
   newIND[i] <- newIND_i
   newEFT <- newIND*(1e+9/sum(newIND)) 
   newEFT_i <- newEFT[i]
+  EFT_inc_abs[i] <- newEFT_i-df$EFT_soceco[i]
   EFT_inc_gdp[i] <- (newEFT_i-df$EFT_soceco[i])/df$GDP[i]*100
   EFT_inc_sqkm[i] <- (newEFT_i-df$EFT_soceco[i])/df$SQKM[i]
   #print(paste("oldEFT_",i, " < newEFT_",i,": ", df$EFT_soceco[i]<newEFT_i, sep = ""))
 }
 
+df$EFT_soceco_incent_abs <- EFT_inc_abs
 df$EFT_soceco_incent_gdp <- EFT_inc_gdp
 df$EFT_soceco_incent_sqkm <- EFT_inc_sqkm
 
@@ -337,24 +343,40 @@ EFT_inc_sqkm <- vector(mode="numeric", length=nrow(df))
 
 for (i in 1:nrow(df)){
   oldPA_i <- df[i,c("PAcatIa","PAcatIb","PAcatII","PAcatIII","PAcatIV","PAcatV","PAcatVI")]
-  newPA_i <- oldPA_i + (df$SQKM[i]*PAprob)/df$SQKM[i]
+  newPA_i <- oldPA_i + PAprob
   newIND_i <- (rowSums(newPA_i/100*iucn_weights)/df$HDI[i])*(df$POP[i]/df$SQKM[i])
   newIND <- df$ANTHR_ind
   newIND[i] <- newIND_i
   newEFT <- newIND*(1e+9/sum(newIND)) 
   newEFT_i <- newEFT[i]
+  EFT_inc_abs[i] <- newEFT_i-df$EFT_anthr[i]
   EFT_inc_gdp[i] <- (newEFT_i-df$EFT_anthr[i])/df$GDP[i]*100
   EFT_inc_sqkm[i] <- (newEFT_i-df$EFT_anthr[i])/df$SQKM[i]
   #print(paste("oldEFT_",i, " < newEFT_",i,": ", df$EFT_anthr[i]<newEFT_i, sep = ""))
 }
 
+df$EFT_anthr_incent_abs <- EFT_inc_abs
 df$EFT_anthr_incent_gdp <- EFT_inc_gdp
 df$EFT_anthr_incent_sqkm <- EFT_inc_sqkm
 
-# Caculating the marginal incentive
-df$EFT_eco_incent_abs <- df$EFT_eco_incent_gdp*df$GDP
-df$EFT_soceco_incent_abs <- df$EFT_soceco_incent_gdp*df$GDP
-df$EFT_anthr_incent_abs <- df$EFT_anthr_incent_gdp*df$GDP
+# # Caculating the marginal incentive
+# df$EFT_eco_incent_abs <- df$EFT_eco_incent_gdp*df$GDP
+# df$EFT_soceco_incent_abs <- df$EFT_soceco_incent_gdp*df$GDP
+# df$EFT_anthr_incent_abs <- df$EFT_anthr_incent_gdp*df$GDP
+
+# inspect graphically
+
+hist(log(df$EFT_eco_incent_abs), breaks = 100, xlim=c(0,20))
+hist(log(df$EFT_soceco_incent_abs), breaks = 100, xlim=c(0,20))
+hist(log(df$EFT_anthr_incent_abs), breaks = 100, xlim=c(0,20))
+
+library(sm)
+sm.density.compare(as.numeric(as.character(c(log(df$EFT_eco_incent_abs),log(df$EFT_soceco_incent_abs),log(df$EFT_anthr_incent_abs)))),as.factor(c(rep("eco", length(log(df$EFT_eco_incent_abs))),rep("soceco", length(log(df$EFT_soceco_incent_abs))),rep("anthr", length(log(df$EFT_anthr_incent_abs))))))
+sm.density.compare(as.numeric(as.character(c(df$EFT_eco_incent_abs,df$EFT_soceco_incent_abs,df$EFT_anthr_incent_abs))),as.factor(c(rep("eco", length(df$EFT_eco_incent_abs)),rep("soceco", length(df$EFT_soceco_incent_abs)),rep("anthr", length(df$EFT_anthr_incent_abs)))))
+
+hist(log(df$EFT_eco_incent_gdp), breaks = 100, xlim=c(-18,0))
+hist(log(df$EFT_soceco_incent_gdp), breaks = 100, xlim=c(-18,0))
+hist(log(df$EFT_anthr_incent_gdp), breaks = 100, xlim=c(-18,0))
 
 # #top incentives ECO_abs
 # head(df[with(df,order(-EFT_eco_incent_abs)),c("Country.Name","EFT_eco_incent_abs")],20)
@@ -389,18 +411,18 @@ op <- par(mfrow = c(3,3),
           mar = c(1,0.5,1,0.5) + 0.1)
 
 #ecocentric
-map1 <- mapCountryData( sPDF, nameColumnToPlot="EFT_eco", addLegend='FALSE', numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "EFT flows in $")
+map1 <- mapCountryData( sPDF, nameColumnToPlot="EFT_eco", addLegend='FALSE', numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "EFT reward in $")
 do.call(addMapLegend, c(map1, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
-text(0,"ecocentric design", adj=c(.5,-20), srt=90, cex = 1.25, font=2)
+text(0,"ecocentric", adj=c(.5,-13), srt=90, cex = 1.25, font=2)
 map2 <- mapCountryData( sPDF, nameColumnToPlot="EFT_eco_incent_abs", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "marginal incentives in $")
 do.call(addMapLegend, c(map2, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
-map3 <- mapCountryData( sPDF, nameColumnToPlot="EFT_eco_incent_gdp", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = " incentives in % of GDP")
+map3 <- mapCountryData( sPDF, nameColumnToPlot="EFT_eco_incent_gdp", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = " leverage of incentive/GDP in %")
 do.call(addMapLegend, c(map3, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
 
 # #socio-ecol
 map1 <- mapCountryData( sPDF, nameColumnToPlot="EFT_soceco", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain",  mapTitle = "")
 do.call(addMapLegend, c(map1, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
-text(0,"socio-ecological design", adj=c(.5,-20), srt=90, cex = 1.25, font=2)
+text(0,"socio-ecological", adj=c(.5,-13), srt=90, cex = 1.25, font=2)
 map2 <- mapCountryData( sPDF, nameColumnToPlot="EFT_soceco_incent_abs", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "")
 do.call(addMapLegend, c(map2, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
 map3 <- mapCountryData( sPDF, nameColumnToPlot="EFT_soceco_incent_gdp", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "")
@@ -409,13 +431,13 @@ do.call(addMapLegend, c(map3, legendMar = 4, labelFontSize=.75, legendIntervals=
 #anthroprocentric
 map1 <- mapCountryData( sPDF, nameColumnToPlot="EFT_anthr", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain",  mapTitle = "")
 do.call(addMapLegend, c(map1, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
-text(0,"anthropocentric design", adj=c(.5,-20), srt=90, cex = 1.25, font=2)
+text(0,"anthropocentric", adj=c(.5,-13), srt=90, cex = 1.25, font=2)
 map2 <- mapCountryData( sPDF, nameColumnToPlot="EFT_anthr_incent_abs", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "")
 do.call(addMapLegend, c(map2, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
 map3 <- mapCountryData( sPDF, nameColumnToPlot="EFT_anthr_incent_gdp", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "")
 do.call(addMapLegend, c(map3, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
 
-dev.print(file= "All_EFT_new.png", device=png, width=4200, height=3000, res=300)
+dev.print(file= "All_EFT_new.png", device=png, width=2800, height=2000, res=300)
 dev.off()
 
 
@@ -430,7 +452,7 @@ df$PAgap <- 17 - rowSums(df[,c("PAcatIa","PAcatIb","PAcatII","PAcatIII","PAcatIV
 qnt <- quantile(df$PAgap,seq(0,1,.25))
 df$PAgap_groups <- cut(df$PAgap,unique(qnt),include.lowest=TRUE)
 library(plyr)
-df$PAgap_groups <- mapvalues(df$PAgap_groups, from = c("[-34.8,1.14]", "(1.14,8.91]",  "(8.91,15.1]",  "(15.1,17]"), to = c("no gap", "low", "med", "high"))
+df$PAgap_groups <- mapvalues(df$PAgap_groups, from = levels(df$PAgap_groups), to = c("no gap", "low", "med", "high"))
 
 sPDF <- joinCountryData2Map( df, joinCode = "ISO3", nameJoinColumn = "ISO")
 
@@ -453,22 +475,36 @@ library(lmtest)
 library(RColorBrewer)
 library(ggplot2)
 library(cowplot)
+library(purrr)
 
 #absolute marginal incentive
-g_eco_abs <- ggplot(df, aes(x=PAgap_groups, y=EFT_eco_incent_abs, fill=PAgap_groups)) + geom_violin() + geom_boxplot(width=.25) + scale_y_continuous(trans="log10", name="marginal incentive in $", limits = c(1e+03, 1e+10)) + scale_fill_brewer(palette="YlOrRd") + labs(title="ecocentric") + guides(fill=FALSE) + theme(axis.title.x = element_blank(), axis.ticks = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5)) 
+g_eco_abs <- ggplot(df, aes(x=PAgap_groups, y=EFT_eco_incent_abs, fill=PAgap_groups)) + geom_violin(trim = FALSE, scale = "count") + geom_boxplot(width=.25) + scale_y_continuous(trans="log10", name="marginal incentive in $", limits = c(1, 1e+10)) + scale_fill_brewer(palette="YlOrRd") + labs(title="ecocentric") + guides(fill=FALSE) + theme(axis.title.x = element_blank(), axis.ticks = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5))
 
-g_soceco_abs <-ggplot(df, aes(x=PAgap_groups, y=EFT_soceco_incent_abs, fill=PAgap_groups)) + geom_violin() + geom_boxplot(width=.25)+ scale_y_continuous(trans="log10", limits = c(1e+03, 1e+10)) + scale_fill_brewer(palette="YlOrRd") + labs(title="socio-ecological") + guides(fill=FALSE) + theme(axis.title.x = element_blank()) + theme(axis.title.y = element_blank(), axis.ticks = element_blank(), axis.text.y = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5)) 
+# df %>% group_by(PAgap_groups) %>% dplyr::summarize(median=median(EFT_eco_incent_abs))
+# df %>% group_by(PAgap_groups) %>% dplyr::summarize(mean=mean(EFT_eco_incent_abs))
 
-g_anthr_abs <-ggplot(df, aes(x=PAgap_groups, y=EFT_anthr_incent_abs, fill=PAgap_groups)) + geom_violin() + geom_boxplot(width=.25) + scale_y_continuous(trans="log10", limits = c(1e+03, 1e+10)) + scale_fill_brewer(palette="YlOrRd") + labs(title="anthropocentric") + guides(fill=guide_legend(title=NULL)) + theme(axis.title.x = element_blank()) + theme(axis.title.y = element_blank(), axis.ticks = element_blank(), axis.text.y = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5)) 
- 
-# multiplot(g_eco_abs, g_soceco_abs, g_anthr_abs, cols = 3)
+g_soceco_abs <-ggplot(df, aes(x=PAgap_groups, y=EFT_soceco_incent_abs, fill=PAgap_groups)) + geom_violin(trim = FALSE, scale = "count") + geom_boxplot(width=.25)+ scale_y_continuous(trans="log10", limits = c(1, 1e+10)) + scale_fill_brewer(palette="YlOrRd") + labs(title="socio-ecological") + guides(fill=FALSE) + theme(axis.title.x = element_blank()) + theme(axis.title.y = element_blank(), axis.ticks = element_blank(), axis.text.y = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5)) 
+
+# df %>% group_by(PAgap_groups) %>% dplyr::summarize(median=median(EFT_soceco_incent_abs))
+# df %>% group_by(PAgap_groups) %>% dplyr::summarize(mean=mean(EFT_soceco_incent_abs))
+
+g_anthr_abs <-ggplot(df, aes(x=PAgap_groups, y=EFT_anthr_incent_abs, fill=PAgap_groups)) + geom_violin(trim = FALSE, scale = "count") + geom_boxplot(width=.25) + scale_y_continuous(trans="log10", limits = c(1, 1e+10)) + scale_fill_brewer(palette="YlOrRd") + labs(title="anthropocentric") + guides(fill=guide_legend(title=NULL)) + theme(axis.title.x = element_blank()) + theme(axis.title.y = element_blank(), axis.ticks = element_blank(), axis.text.y = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5)) 
+
+# df %>% group_by(PAgap_groups) %>% dplyr::summarize(median=median(EFT_anthr_incent_abs))
+# df %>% group_by(PAgap_groups) %>% dplyr::summarize(mean=mean(EFT_anthr_incent_abs))
 
 # incentives per gdp
-g_eco_gdp <- ggplot(df, aes(x=PAgap_groups, y=EFT_eco_incent_gdp, fill=PAgap_groups)) + geom_violin() + geom_boxplot(width=.25) + scale_y_continuous(trans="log10", name="incentive in % of GDP", limits = c(1e-08, 1e-00)) + scale_fill_brewer(palette="YlOrRd") + guides(fill=FALSE) + theme(axis.title.x = element_blank(), axis.ticks = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5)) #+ theme(plot.margin = unit(c(1,2.5,1,0), "cm")) 
+g_eco_gdp <- ggplot(df, aes(x=PAgap_groups, y=EFT_eco_incent_gdp, fill=PAgap_groups)) + geom_violin(trim = FALSE, scale = "count")  + geom_boxplot(width=.25) + scale_y_continuous(trans="log10", name="leverage of incentive/GDP in in %", limits = c(1e-08, 1e+02)) + scale_fill_brewer(palette="YlOrRd") + guides(fill=FALSE) + theme(axis.title.x = element_blank(), axis.ticks = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5)) #+ theme(plot.margin = unit(c(1,2.5,1,0), "cm")) 
 
-g_soceco_gdp <- ggplot(df, aes(x=PAgap_groups, y=EFT_soceco_incent_gdp, fill=PAgap_groups)) + geom_violin() + geom_boxplot(width=.25) + scale_y_continuous(trans="log10",limits =c(1e-08, 1e-00)) + scale_fill_brewer(palette="YlOrRd") + guides(fill=FALSE) + theme(axis.title.x = element_blank()) + theme(axis.title.y = element_blank(), axis.ticks = element_blank(), axis.text.y = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5)) 
+# df %>% group_by(PAgap_groups) %>% dplyr::summarize(med=median(EFT_eco_incent_gdp))
 
-g_anthr_gdp <- ggplot(df, aes(x=PAgap_groups, y=EFT_anthr_incent_gdp, fill=PAgap_groups)) + geom_violin() + geom_boxplot(width=.25) + scale_y_continuous(trans="log10",limits = c(1e-08, 1e-00)) + scale_fill_brewer(palette="YlOrRd") +  guides(fill=guide_legend(title=NULL)) + theme(axis.title.x = element_blank()) + theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5)) 
+g_soceco_gdp <- ggplot(df, aes(x=PAgap_groups, y=EFT_soceco_incent_gdp, fill=PAgap_groups)) + geom_violin(trim = FALSE, scale = "count")  + geom_boxplot(width=.25) + scale_y_continuous(trans="log10",limits =c(1e-08, 1e+02)) + scale_fill_brewer(palette="YlOrRd") + guides(fill=FALSE) + theme(axis.title.x = element_blank()) + theme(axis.title.y = element_blank(), axis.ticks = element_blank(), axis.text.y = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5)) 
+
+# df %>% group_by(PAgap_groups) %>% dplyr::summarize(med=median(EFT_soceco_incent_gdp))
+
+g_anthr_gdp <- ggplot(df, aes(x=PAgap_groups, y=EFT_anthr_incent_gdp, fill=PAgap_groups)) + geom_violin(trim = FALSE, scale = "count")  + geom_boxplot(width=.25) + scale_y_continuous(trans="log10",limits = c(1e-08, 1e+02)) + scale_fill_brewer(palette="YlOrRd") +  guides(fill=guide_legend(title=NULL)) + theme(axis.title.x = element_blank()) + theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks = element_blank(), axis.text.x = element_blank()) + theme(plot.title = element_text(hjust = 0.5)) 
+
+# df %>% group_by(PAgap_groups) %>% dplyr::summarize(med=median(EFT_anthr_incent_gdp))
 
 theme_set(theme_grey())
 legend_abs <- get_legend(g_anthr_abs)
@@ -531,3 +567,39 @@ codebook <- as.data.frame(cbind(names(df), c(
 names(codebook) <- c("Variable Name", "Description")
 write.xlsx(codebook, file="EFT_world_data.xlsx", sheetName="codebook", append=TRUE, row.names=FALSE, col.names = T)
 
+
+library(htmlTable)
+
+inc_eco <- tapply(df$EFT_eco_incent_abs, df$PAgap_groups, summary)
+inc_eco <- cbind("ecocentric",c("no gap","low","med","high"),rbind(inc_eco[[1]],inc_eco[[2]],inc_eco[[3]],inc_eco[[4]]))
+
+inc_soceco <- tapply(df$EFT_soceco_incent_abs, df$PAgap_groups, summary)
+inc_soceco <- cbind("socio-ecological",c("no gap","low","med","high"),rbind(inc_soceco[[1]],inc_soceco[[2]],inc_soceco[[3]],inc_soceco[[4]]))
+
+inc_anthr <- tapply(df$EFT_anthr_incent_abs, df$PAgap_groups, summary)
+inc_anthr <- cbind("anthropocentric",c("no gap","low","med","high"),rbind(inc_anthr[[1]],inc_anthr[[2]],inc_anthr[[3]],inc_anthr[[4]]))
+
+out1 <- as.data.frame(rbind(inc_eco, inc_soceco, inc_anthr))
+names(out1)[1] <- "Design"
+names(out1)[2] <- "Group"
+
+lev_eco <- tapply(df$EFT_eco_incent_gdp, df$PAgap_groups, summary)
+lev_eco <- cbind("ecocentric",c("no gap","low","med","high"),rbind(lev_eco[[1]],lev_eco[[2]],lev_eco[[3]],lev_eco[[4]]))
+
+lev_soceco <- tapply(df$EFT_soceco_incent_gdp, df$PAgap_groups, summary)
+lev_soceco <- cbind("socio-ecological",c("no gap","low","med","high"),rbind(lev_soceco[[1]],lev_soceco[[2]],lev_soceco[[3]],lev_soceco[[4]]))
+
+lev_anthr <- tapply(df$EFT_anthr_incent_gdp, df$PAgap_groups, summary)
+lev_anthr <- cbind("anthropocentric",c("no gap","low","med","high"),rbind(lev_anthr[[1]],lev_anthr[[2]],lev_anthr[[3]],lev_anthr[[4]]))
+
+out2 <- as.data.frame(rbind(lev_eco, lev_soceco, lev_anthr))
+names(out2)[1] <- "Design"
+names(out2)[2] <- "Group"
+
+outputtab <- rbind(out1,out2)
+outputtab <- cbind(c(rep("incentive",12),rep("leverage",12)),outputtab)
+names(outputtab)[1] <- "Measure"
+outputtab[4:9] <- lapply(outputtab[4:9],function(x) as.numeric(as.character(x)))
+outputtab[4:9] <- rbind(round(outputtab[1:12,4:9],1),round(outputtab[13:24,4:9],6))
+
+htmlTable(outputtab)
