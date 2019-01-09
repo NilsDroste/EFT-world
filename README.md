@@ -7,4 +7,4 @@ The article:
 
 Droste, N., Farley, J., Ring, I., May, P.H., Ricketts, T.H. (2017)
 Designing a global mechanism for intergovernmental biodiversity financing.
-*In preparation for submission to Nature*
+*In preparation for submission to Nature Sustainability*
