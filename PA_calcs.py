@@ -20,8 +20,8 @@ arcpy.CreateFileGDB_management('Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput', '
 arcpy.CreateFileGDB_management('Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput', 'intermediate_Point.gdb')
 
 ## copy data to intermediate gdb
-arcpy.CopyFeatures_management ("Y:\\Home\\droste\\GIS\\EFTglob\\input\\WDPA_Dec2016_Public.gdb\\WDPA_poly_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Poly.gdb\\WDPA_poly_Dec2016")
-arcpy.CopyFeatures_management ("Y:\\Home\\droste\\GIS\\EFTglob\\input\\WDPA_Dec2016_Public.gdb\\WDPA_point_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Point.gdb\\WDPA_point_Dec2016")
+arcpy.CopyFeatures_management ("Y:\\Home\\droste\\GIS\\EFTglob\\input\\WDPA_May2017_Public.gdb\\WDPA_poly_May2017", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Poly.gdb\\WDPA_poly_May2017")
+arcpy.CopyFeatures_management ("Y:\\Home\\droste\\GIS\\EFTglob\\input\\WDPA_May2017_Public.gdb\\WDPA_point_May2017", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Point.gdb\\WDPA_point_May2017")
 
 
 ################################################################################
@@ -31,16 +31,16 @@ arcpy.CopyFeatures_management ("Y:\\Home\\droste\\GIS\\EFTglob\\input\\WDPA_Dec2
 #TODO: divide into seperate scrips OR fork https://github.com/jeffreyhanson/global-protected-areas/
 
 ## load data from intermediate gdb
-arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Poly.gdb\\WDPA_poly_Dec2016", "WDPA_poly_Dec2016")
-arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Point.gdb\\WDPA_point_Dec2016", "WDPA_point_Dec2016")
+arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Poly.gdb\\WDPA_poly_May2017", "WDPA_poly_May2017")
+arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Point.gdb\\WDPA_point_May2017", "WDPA_point_May2017")
 
 ## repair polygon geometry
 for i in list(range(1,4)):
-    arcpy.RepairGeometry_management("WDPA_poly_Dec2016")
+    arcpy.RepairGeometry_management("WDPA_poly_May2017")
 
 ## repair point geometry
 for i in list(range(1,4)):
-    arcpy.RepairGeometry_management("WDPA_point_Dec2016")
+    arcpy.RepairGeometry_management("WDPA_point_May2017")
 
 
 ################################################################################
@@ -48,11 +48,11 @@ for i in list(range(1,4)):
 ################################################################################
 
 ## load data from repaired intermediate gdb
-arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Poly.gdb\\WDPA_poly_Dec2016", "WDPA_poly_Dec2016")
-arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Point.gdb\\WDPA_point_Dec2016", "WDPA_point_Dec2016")
+arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Poly.gdb\\WDPA_poly_May2017", "WDPA_poly_May2017")
+arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermediate_Point.gdb\\WDPA_point_May2017", "WDPA_point_May2017")
 
 ## parse fields in shapefiles
-for file in ( "WDPA_poly_Dec2016", "WDPA_point_Dec2016" ):
+for file in ( "WDPA_poly_May2017", "WDPA_point_May2017" ):
     fields = [field.name for field in arcpy.ListFields(file)]
     for i in range(len(fields)):
         fields[i] = fields[i].encode('utf8')
@@ -62,8 +62,8 @@ arcpy.CreateFileGDB_management('Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput', '
 arcpy.CreateFileGDB_management('Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput', 'intermed_Point_subsel.gdb')
 
 ## subselect actual PA
-arcpy.Select_analysis("WDPA_poly_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_subsel.gdb\\WDPA_poly_Dec2016" , ' "STATUS" NOT IN (\'Not Reported\', \'Proposed\') AND NOT "MARINE" = \'2\' ')
-arcpy.Select_analysis("WDPA_point_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_subsel.gdb\\WDPA_point_Dec2016" , ' "STATUS" NOT IN (\'Not Reported\', \'Proposed\') AND NOT "MARINE" = \'2\' AND "REP_AREA" > 0 ' )
+arcpy.Select_analysis("WDPA_poly_May2017", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_subsel.gdb\\WDPA_poly_May2017" , ' "STATUS" NOT IN (\'Not Reported\', \'Proposed\') AND NOT "MARINE" = \'2\' ')
+arcpy.Select_analysis("WDPA_point_May2017", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_subsel.gdb\\WDPA_point_May2017" , ' "STATUS" NOT IN (\'Not Reported\', \'Proposed\') AND NOT "MARINE" = \'2\' AND "REP_AREA" > 0 ' )
 
 
 ################################################################################
@@ -71,7 +71,7 @@ arcpy.Select_analysis("WDPA_point_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\Arc
 ################################################################################
 
 ## load data from subset intermediate gdb
-arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_subsel.gdb\\WDPA_point_Dec2016", "WDPA_point_Dec2016")
+arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_subsel.gdb\\WDPA_point_May2017", "WDPA_point_May2017")
 
 ## projection parameters
 output_coordinate_reference_system = 54017 # World_Behrman
@@ -81,7 +81,7 @@ distance_coordinate_reference_system = 54002 # World_Equidistant_Cylindrical
 arcpy.CreateFileGDB_management('Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput', 'intermed_Point_subsel_reproj.gdb')
 
 ## reprojecting point data to distance coordinate system
-arcpy.Project_management("WDPA_point_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_subsel_reproj.gdb\\WDPA_point_Dec2016", distance_coordinate_reference_system)
+arcpy.Project_management("WDPA_point_May2017", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_subsel_reproj.gdb\\WDPA_point_May2017", distance_coordinate_reference_system)
 
 
 ################################################################################
@@ -89,17 +89,17 @@ arcpy.Project_management("WDPA_point_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\
 ################################################################################
 
 ## load data from subset intermediate gdb
-arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_subsel_reproj.gdb\\WDPA_point_Dec2016", "WDPA_point_Dec2016")
+arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_subsel_reproj.gdb\\WDPA_point_May2017", "WDPA_point_May2017")
 
 ## calculate radius
-arcpy.AddField_management("WDPA_point_Dec2016", 'REP_RADIUS', 'DOUBLE')
-arcpy.CalculateField_management("WDPA_point_Dec2016", 'REP_RADIUS', 'math.sqrt(!REP_AREA!/math.pi)', 'PYTHON_9.3')
+arcpy.AddField_management("WDPA_point_May2017", 'REP_RADIUS', 'DOUBLE')
+arcpy.CalculateField_management("WDPA_point_May2017", 'REP_RADIUS', 'math.sqrt(!REP_AREA!/math.pi)', 'PYTHON_9.3')
 
 ## create intermediate buffered gdb
 arcpy.CreateFileGDB_management('Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput', 'intermed_Point_buff.gdb')
 
 ## buffer points to polygon
-arcpy.Buffer_analysis("WDPA_point_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_buff.gdb\\WDPA_point_Dec2016", 'REP_RADIUS')
+arcpy.Buffer_analysis("WDPA_point_May2017", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_buff.gdb\\WDPA_point_May2017", 'REP_RADIUS')
 
 
 ################################################################################
@@ -107,7 +107,7 @@ arcpy.Buffer_analysis("WDPA_point_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\Arc
 ################################################################################
 
 ## load data from subset intermediate gdb
-arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_buff.gdb\\WDPA_point_Dec2016", "WDPA_point_Dec2016")
+arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_buff.gdb\\WDPA_point_May2017", "WDPA_point_May2017")
 
 ## projection parameters
 output_coordinate_reference_system = 54017 # World_Behrman
@@ -116,7 +116,7 @@ output_coordinate_reference_system = 54017 # World_Behrman
 arcpy.CreateFileGDB_management('Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput', 'intermed_Point_buff_rprj.gdb')
 
 ## reprojecting point data to output coordinate system
-arcpy.Project_management("WDPA_point_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_buff_rprj.gdb\\WDPA_point_Dec2016", output_coordinate_reference_system)
+arcpy.Project_management("WDPA_point_May2017", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_buff_rprj.gdb\\WDPA_point_May2017", output_coordinate_reference_system)
 
 
 ################################################################################
@@ -127,13 +127,13 @@ arcpy.Project_management("WDPA_point_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\
 output_coordinate_reference_system = 54017 # World_Behrman
 
 ## load data from subset intermediate gdb
-arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_subsel.gdb\\WDPA_poly_Dec2016", "WDPA_poly_Dec2016")
+arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_subsel.gdb\\WDPA_poly_May2017", "WDPA_poly_May2017")
 
 ## create intermediate reprojection gdb
 arcpy.CreateFileGDB_management('Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput', 'intermed_Poly_reproj.gdb')
 
 ## reprojecting poly data to output coordinate system
-arcpy.Project_management("WDPA_poly_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_reproj.gdb\\WDPA_poly_Dec2016", output_coordinate_reference_system)
+arcpy.Project_management("WDPA_poly_May2017", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_reproj.gdb\\WDPA_poly_May2017", output_coordinate_reference_system)
 
 
 ################################################################################
@@ -148,14 +148,14 @@ error_option="NO_CHECK"
 collapsed_point_option="NO_KEEP"
 
 ## load data from reprojected intermediate gdb
-arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_reproj.gdb\\WDPA_poly_Dec2016", "WDPA_poly_Dec2016")
+arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_reproj.gdb\\WDPA_poly_May2017", "WDPA_poly_May2017")
 
 ## create intermediate reprojection gdb
 arcpy.CreateFileGDB_management('Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput', 'intermed_Poly_rprj_smpl.gdb')
 
 ## processing simplification
 arcpy.SimplifyPolygon_cartography(
-    "WDPA_poly_Dec2016", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_rprj_smpl.gdb\\WDPA_poly_Dec2016",
+    "WDPA_poly_May2017", "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_rprj_smpl.gdb\\WDPA_poly_May2017",
     algorithm, tolerance, minimum_area,
     error_option, collapsed_point_option
 )
@@ -169,8 +169,8 @@ arcpy.SimplifyPolygon_cartography(
 output_coordinate_reference_system = 54017 # World_Behrman
 
 ## load data from reprojected intermediate gdb
-arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_rprj_smpl.gdb\\WDPA_poly_Dec2016", "WDPA_poly_Dec2016")
-arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_buff_rprj.gdb\\WDPA_point_Dec2016", "WDPA_point_Dec2016")
+arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Poly_rprj_smpl.gdb\\WDPA_poly_May2017", "WDPA_poly_May2017")
+arcpy.MakeFeatureLayer_management ("Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\intermed_Point_buff_rprj.gdb\\WDPA_point_May2017", "WDPA_point_May2017")
 
 ## checkout sa
 arcpy.CheckOutExtension("Spatial")
@@ -179,7 +179,7 @@ arcpy.CheckOutExtension("Spatial")
 arcpy.CreateFileGDB_management('Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput', 'allIUCN.gdb')
 
 ## merging
-arcpy.Merge_management(["WDPA_poly_Dec2016", "WDPA_point_Dec2016"], "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\allIUCN.gdb\\allIUCN", output_coordinate_reference_system)
+arcpy.Merge_management(["WDPA_poly_May2017", "WDPA_point_May2017"], "Y:\\Home\\droste\\GIS\\EFTglob\\ArcGISoutput\\allIUCN.gdb\\allIUCN", output_coordinate_reference_system)
 
 
 ################################################################################

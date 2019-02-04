@@ -97,22 +97,21 @@ GDP <- GDP[c(48:nrow(GDP)),]
 GDP[GDP$country=="West Bank and Gaza",'country'] <- 
 
 #tax revenue
-TR <- WDI(country = "all", indicator = "GC.TAX.TOTL.GD.ZS", start = 1960, end = 2017, extra = FALSE, cache = NULL)
-TR_groups <- TR[c(1:2632),]
-TR <- TR[c(2633:nrow(TR)),]
-# detach(package:MASS) # detach to avoid confusion with select
+TR <- WDI(country = "all", indicator = "GC.TAX.TOTL.GD.ZS", start = 2008, end = 2017, extra = FALSE, cache = NULL)
+TR_groups <- TR %>% filter(country %in% c("Arab World","Caribbean small states","Central Europe and the Baltics","Early-demographic dividend","East Asia & Pacific","East Asia & Pacific (excluding high income)","East Asia & Pacific (IDA & IBRD countries)","Euro area","Europe & Central Asia","Europe & Central Asia (excluding high income)","Europe & Central Asia (IDA & IBRD countries)","European Union","Fragile and conflict affected situations","Heavily indebted poor countries (HIPC)","High income","IBRD only","IDA & IBRD total","IDA blend","IDA only","IDA total","Late-demographic dividend","Latin America & Caribbean","Latin America & Caribbean (excluding high income)","Latin America & the Caribbean (IDA & IBRD countries)","Least developed countries: UN classification","Low & middle income","Low income","Lower middle income","Middle East & North Africa","Middle East & North Africa (excluding high income)","Middle East & North Africa (IDA & IBRD countries)","Middle income","North America","Not classified","OECD members","Other small states","Pacific island small states","Post-demographic dividend","Pre-demographic dividend","Small states","South Asia","South Asia (IDA & IBRD)","Sub-Saharan Africa","Sub-Saharan Africa (excluding high income)","Sub-Saharan Africa (IDA & IBRD countries)","Upper middle income","World"))
+TR <- TR[c((nrow(TR_groups)+1):nrow(TR)),]
+detach(package:MASS) # detach to avoid confusion with select
 TR <- TR %>% 
-  select(iso2c,GC.TAX.TOTL.GD.ZS,year) %>% 
   spread(year,GC.TAX.TOTL.GD.ZS) 
 TR <- TR %>% 
-  mutate(avgTR=rowMeans(TR[,c(2:57)],na.rm = TRUE)) %>% 
+  mutate(avgTR=rowMeans(TR[,c(3:12)],na.rm = TRUE)) %>% 
   select(iso2c,avgTR)
 names(TR)[names(TR) == 'iso2c'] <- 'ISO2'
 TR_groups <- TR_groups %>%  # needed for later imputation of unkown values through averages per income group
   select(country,GC.TAX.TOTL.GD.ZS,year) %>% 
   spread(year,GC.TAX.TOTL.GD.ZS) 
 TR_groups <- TR_groups %>% 
-  mutate(avgTR=rowMeans(TR_groups[,c(2:57)],na.rm = TRUE)) %>% 
+  mutate(avgTR=rowMeans(TR_groups[,c(2:11)],na.rm = TRUE)) %>% 
   select(country,avgTR)
 
 #government effectivness by WB governance indicators
@@ -338,6 +337,7 @@ df$EFT_soceco_incent_gdp <- EFT_inc_gdp
 df$EFT_soceco_incent_sqkm <- EFT_inc_sqkm
 
 #anthropocentric
+EFT_inc_abs <- vector(mode="numeric", length=nrow(df))
 EFT_inc_gdp <- vector(mode="numeric", length=nrow(df))
 EFT_inc_sqkm <- vector(mode="numeric", length=nrow(df))
 
@@ -416,7 +416,7 @@ do.call(addMapLegend, c(map1, legendMar = 4, labelFontSize=.75, legendIntervals=
 text(0,"ecocentric", adj=c(.5,-13), srt=90, cex = 1.25, font=2)
 map2 <- mapCountryData( sPDF, nameColumnToPlot="EFT_eco_incent_abs", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "marginal incentives in $")
 do.call(addMapLegend, c(map2, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
-map3 <- mapCountryData( sPDF, nameColumnToPlot="EFT_eco_incent_gdp", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = " leverage of incentive/GDP in %")
+map3 <- mapCountryData( sPDF, nameColumnToPlot="EFT_eco_incent_gdp", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = " leverage in % of GDP")
 do.call(addMapLegend, c(map3, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
 
 # #socio-ecol
