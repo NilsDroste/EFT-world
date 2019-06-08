@@ -460,6 +460,22 @@ write.xlsx(codebook, file="data/out/EFT_world_data.xlsx", sheetName="codebook", 
 
 
 # Descriptive Statistics
+
+## reward 
+reward_eco <- tapply(df$EFT_eco, df$PAgap_groups, summary)
+reward_eco <- cbind("ecocentric",c("no gap","low","med","high"),rbind(reward_eco[[1]],reward_eco[[2]],reward_eco[[3]],reward_eco[[4]]))
+
+reward_soceco <- tapply(df$EFT_soceco, df$PAgap_groups, summary)
+reward_soceco <- cbind("socio-ecological",c("no gap","low","med","high"),rbind(reward_soceco[[1]],reward_soceco[[2]],reward_soceco[[3]],reward_soceco[[4]]))
+
+reward_anthr <- tapply(df$EFT_anthr, df$PAgap_groups, summary)
+reward_anthr <- cbind("anthropocentric",c("no gap","low","med","high"),rbind(reward_anthr[[1]],reward_anthr[[2]],reward_anthr[[3]],reward_anthr[[4]]))
+
+out1 <- as.data.frame(rbind(reward_eco, reward_soceco, reward_anthr))
+names(out1)[1] <- "Design"
+names(out1)[2] <- "Group"
+
+## incentive
 inc_eco <- tapply(df$EFT_eco_incent_abs, df$PAgap_groups, summary)
 inc_eco <- cbind("ecocentric",c("no gap","low","med","high"),rbind(inc_eco[[1]],inc_eco[[2]],inc_eco[[3]],inc_eco[[4]]))
 
@@ -469,10 +485,11 @@ inc_soceco <- cbind("socio-ecological",c("no gap","low","med","high"),rbind(inc_
 inc_anthr <- tapply(df$EFT_anthr_incent_abs, df$PAgap_groups, summary)
 inc_anthr <- cbind("anthropocentric",c("no gap","low","med","high"),rbind(inc_anthr[[1]],inc_anthr[[2]],inc_anthr[[3]],inc_anthr[[4]]))
 
-out1 <- as.data.frame(rbind(inc_eco, inc_soceco, inc_anthr))
-names(out1)[1] <- "Design"
-names(out1)[2] <- "Group"
+out2 <- as.data.frame(rbind(inc_eco, inc_soceco, inc_anthr))
+names(out2)[1] <- "Design"
+names(out2)[2] <- "Group"
 
+## leverage
 lev_eco <- tapply(df$EFT_eco_incent_gdp, df$PAgap_groups, summary)
 lev_eco <- cbind("ecocentric",c("no gap","low","med","high"),rbind(lev_eco[[1]],lev_eco[[2]],lev_eco[[3]],lev_eco[[4]]))
 
@@ -482,15 +499,15 @@ lev_soceco <- cbind("socio-ecological",c("no gap","low","med","high"),rbind(lev_
 lev_anthr <- tapply(df$EFT_anthr_incent_gdp, df$PAgap_groups, summary)
 lev_anthr <- cbind("anthropocentric",c("no gap","low","med","high"),rbind(lev_anthr[[1]],lev_anthr[[2]],lev_anthr[[3]],lev_anthr[[4]]))
 
-out2 <- as.data.frame(rbind(lev_eco, lev_soceco, lev_anthr))
-names(out2)[1] <- "Design"
-names(out2)[2] <- "Group"
+out3 <- as.data.frame(rbind(lev_eco, lev_soceco, lev_anthr))
+names(out3)[1] <- "Design"
+names(out3)[2] <- "Group"
 
-outputtab <- rbind(out1,out2)
-outputtab <- cbind(c(rep("incentive",12),rep("leverage",12)),outputtab)
+outputtab <- rbind(out1,out2,out3)
+outputtab <- cbind(c(rep("reward",12),rep("incentive",12),rep("leverage",12)),outputtab)
 names(outputtab)[1] <- "Measure"
 outputtab[4:9] <- lapply(outputtab[4:9],function(x) as.numeric(as.character(x)))
-outputtab[4:9] <- rbind(round(outputtab[1:12,4:9],1),round(outputtab[13:24,4:9],6))
+outputtab[4:9] <- rbind(round(outputtab[1:12,4:9]), round(outputtab[13:24,4:9],1),round(outputtab[25:36,4:9],6))
 
 htmlTable::htmlTable(outputtab)
 
