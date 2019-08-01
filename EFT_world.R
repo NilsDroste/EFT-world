@@ -11,7 +11,7 @@ setwd(here())
 
 # 01 - read in  data ----------------------------------------------------------
 
-PA <- read.csv("data/rawPA.csv", encoding = "utf-8") #country2 is the more precise arcpy calculation
+PA <- read.csv("data/raw/PA.csv", encoding = "utf-8") #country2 is the more precise arcpy calculation
 
 PA <- PA[,c(6,4,20,27,29:30,36,70:76)] # get rid of (for now) unnecessary columns
 
@@ -22,7 +22,7 @@ PA[PA$Country.Name=="PALESTINIAN TERRITORY, OCCUPIED",1] <- "PALESTINE, STATE OF
 
 PA$ID <- tolower(PA$Country.Name)
 
-CBD <- read.csv("data/rawCBD.csv")
+CBD <- read.csv("data/raw/CBD.csv")
 # Note : rtf = Ratification, acs = Accession, acp = Acceptance, apv = Approval, scs = Succession
 
 # fixing name problems for merge
@@ -50,7 +50,7 @@ CBD[CBD$Country.Name=="Venezuela (Bolivarian Republic of)",2] <- "Venezuela"
 CBD$ID <- tolower(CBD$Country.Name)
 
 #HDI
-all_content_HDI = readLines("data/rawHDI2017.csv", 190) #omitting incomplete last line problem
+all_content_HDI = readLines("data/raw/HDI2017.csv", 190) #omitting incomplete last line problem
 skip_first = all_content_HDI[-1] #reading in data except first line
 HDI = read.csv(textConnection(skip_first), header = TRUE, stringsAsFactors = FALSE) #create data set
 
@@ -299,32 +299,32 @@ op <- par(mfrow = c(3,3),
 
 #ecocentric
 map1 <- mapCountryData( sPDF, nameColumnToPlot="EFT_eco", addLegend='FALSE', numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "EFT reward in $")
-do.call(addMapLegend, c(map1, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
+do.call(addMapLegend, c(map1, legendMar = 4, labelFontSize=.85, legendIntervals="page"))
 text(0,"ecocentric", adj=c(.5,-13), srt=90, cex = 1.25, font=2)
 map2 <- mapCountryData( sPDF, nameColumnToPlot="EFT_eco_incent_abs", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "marginal incentives in $")
-do.call(addMapLegend, c(map2, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
+do.call(addMapLegend, c(map2, legendMar = 4, labelFontSize=.85, legendIntervals="page"))
 map3 <- mapCountryData( sPDF, nameColumnToPlot="EFT_eco_incent_gdp", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = " leverage in % of GDP")
-do.call(addMapLegend, c(map3, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
+do.call(addMapLegend, c(map3, legendMar = 4, labelFontSize=.85, legendIntervals="page"))
 
 # #socio-ecol
 map1 <- mapCountryData( sPDF, nameColumnToPlot="EFT_soceco", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain",  mapTitle = "")
-do.call(addMapLegend, c(map1, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
+do.call(addMapLegend, c(map1, legendMar = 4, labelFontSize=.85, legendIntervals="page"))
 text(0,"socio-ecological", adj=c(.5,-13), srt=90, cex = 1.25, font=2)
 map2 <- mapCountryData( sPDF, nameColumnToPlot="EFT_soceco_incent_abs", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "")
-do.call(addMapLegend, c(map2, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
+do.call(addMapLegend, c(map2, legendMar = 4, labelFontSize=.85, legendIntervals="page"))
 map3 <- mapCountryData( sPDF, nameColumnToPlot="EFT_soceco_incent_gdp", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "")
-do.call(addMapLegend, c(map3, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
+do.call(addMapLegend, c(map3, legendMar = 4, labelFontSize=.85, legendIntervals="page"))
 
 #anthroprocentric
 map1 <- mapCountryData( sPDF, nameColumnToPlot="EFT_anthr", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain",  mapTitle = "")
-do.call(addMapLegend, c(map1, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
+do.call(addMapLegend, c(map1, legendMar = 4, labelFontSize=.85, legendIntervals="page"))
 text(0,"anthropocentric", adj=c(.5,-13), srt=90, cex = 1.25, font=2)
 map2 <- mapCountryData( sPDF, nameColumnToPlot="EFT_anthr_incent_abs", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "")
-do.call(addMapLegend, c(map2, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
+do.call(addMapLegend, c(map2, legendMar = 4, labelFontSize=.85, legendIntervals="page"))
 map3 <- mapCountryData( sPDF, nameColumnToPlot="EFT_anthr_incent_gdp", addLegend = F, numCats =10, catMethod = "quantiles", colourPalette="terrain", mapTitle = "")
-do.call(addMapLegend, c(map3, legendMar = 4, labelFontSize=.75, legendIntervals="page"))
+do.call(addMapLegend, c(map3, legendMar = 4, labelFontSize=.85, legendIntervals="page"))
 
-dev.print(file= "figs/All_EFT.png", device=png, width=2800, height=2000, res=300)
+dev.print(file= "figs/Fig1.pdf", width=9, height=6.5, device=pdf)
 dev.off()
 
 
@@ -341,12 +341,13 @@ sPDF <- joinCountryData2Map(df, joinCode = "ISO3", nameJoinColumn = "ISO")
 # reproject to Robinson
 sPDF <- spTransform(sPDF, CRS=CRS("+proj=robin +ellps=WGS84"))
 colourPalette <- RColorBrewer::brewer.pal(4,"YlOrRd")
-par(mar=c(8,0,3,0),cex.main=0.65)
+par(mar=c(8,0,0.5,0),cex.main=0.6)
 map1 <- mapCountryData( sPDF, nameColumnToPlot="PAgap_groups",  numCats =4, addLegend = F, catMethod='categorical', colourPalette = colourPalette, mapTitle = "Aichi target 11 gap")
 do.call(addMapLegendBoxes, c(map1, title="Quartiles", x="bottom", horiz = T, cex=.5, pt.cex = 1))
-dev.print(file= "figs/PAgap_cuartiles.png", device=png, width=2200, height=1700, res=300)
+dev.print(file= "figs/Fig2.pdf", width=7, height=5, device=pdf)
 dev.off()
-#TODO: This map needs to be cut with image processing tools in order to crop white spaces, it is a HACK to place the legend well
+#TODO: This map needs to be cut with image processing tools in order to crop white spaces, it is a HACK to place the legend well 
+# e.g. > pdfcrop Fig2.pdf Fig2.pdf --margin="2 2 2 2" in windows CMD
 
 # 07 - evaluation of design options -------------------------------------------------------
 
@@ -396,9 +397,7 @@ ggdraw() +
   draw_plot(plot_grid(g_eco_abs, g_soceco_abs, g_anthr_abs + theme(legend.position = 'none'), g_eco_gdp, g_soceco_gdp, g_anthr_gdp + theme(legend.position = 'none'), ncol = 3, nrow=2, align = 'hv'), width = 0.9) +
   draw_plot(legend_abs, x = 0.9, y=.01, width = 0.1)
 
-#multiplot absolut and per GDP incentives
-# multiplot(g_eco_abs, g_eco_sqkm, g_soceco_abs, g_soceco_sqkm, g_anthr_abs, g_anthr_sqkm, cols = 3)
-dev.print(file= "figs/DesignEvaluation.png", device=png, width=2400, height=1700, res=300)
+ggsave(file= "figs/Fig3.pdf", width=9, height=6)
 dev.off()
 
 # housekeeping
@@ -456,7 +455,7 @@ codebook <- as.data.frame(cbind(names(df), c(
   "PA gap to Aichi target 11 in 4 groups"
 )))
 names(codebook) <- c("Variable Name", "Description")
-write.xlsx(codebook, file="data/out/EFT_world_data.xlsx", sheetName="codebook", append=TRUE, row.names=FALSE, col.names = T)
+xlsx::write.xlsx(codebook, file="data/out/EFT_world_data.xlsx", sheetName="codebook", append=TRUE, row.names=FALSE, col.names = T)
 
 
 # Descriptive Statistics
